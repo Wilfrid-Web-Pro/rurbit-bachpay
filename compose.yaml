@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rurbit
+      POSTGRES_PASSWORD: rurbit_dev_password
+      POSTGRES_DB: rurbit_pay
+    ports:
+      - "5432:5432"
+    volumes:
+      - rurbit-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rurbit -d rurbit_pay"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  rurbit-postgres:

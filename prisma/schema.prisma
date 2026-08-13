@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum KeyStatus {
+  ACTIVE
+  PURGED
+}
+
+enum BatchStatus {
+  DRAFT
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
+enum PaymentMethod {
+  LIGHTNING_ADDRESS
+  INTRA_LEDGER
+}
+
+enum RecipientStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+model Institution {
+  id                 String       @id @db.VarChar(64)
+  blinkUserId        String       @db.VarChar(128)
+  blinkUsername      String?      @db.VarChar(128)
+  walletId           String       @db.VarChar(128)
+  walletCurrency     String       @default("BTC") @db.VarChar(8)
+  balanceSnapshot    BigInt?
+  keyCiphertext      String?      @db.Text
+  keyIv              String?      @db.VarChar(32)
+  keyAuthTag         String?      @db.VarChar(32)
+  keyStatus          KeyStatus    @default(ACTIVE)
+  keyVersion         Int          @default(1)
+  keyVerifiedAt      DateTime?
+  keyPurgedAt        DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  sessions           Session[]
+  batches            Batch[]
+  auditEvents        AuditEvent[]
+
+  @@index([blinkUserId])
+  @@index([keyStatus])
+}
+
+model Session {
+  id             String      @id @default(cuid())
+  tokenHash      String      @unique @db.Char(64)
+  institutionId  String      @db.VarChar(64)
+  institution    Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  expiresAt      DateTime
+  createdAt      DateTime    @default(now())
+
+  @@index([institutionId])
+  @@index([expiresAt])
+}
+
+model Batch {
+  id                  String          @id @default(cuid())
+  institutionId       String          @db.VarChar(64)
+  institution         Institution     @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  status              BatchStatus     @default(DRAFT)
+  paymentMethod       PaymentMethod   @default(LIGHTNING_ADDRESS)
+  recipientsTotal     Int
+  totalAmount         BigInt
+  successfulPayments  Int             @default(0)
+  failedPayments      Int             @default(0)
+  errorMessage        String?         @db.Text
+  startedAt           DateTime?
+  completedAt         DateTime?
+  keyPurgedAt         DateTime?
+  keyVersionUsed      Int?
+  createdAt           DateTime        @default(now())
+  recipients          BatchRecipient[]
+  auditEvents         AuditEvent[]
+
+  @@index([institutionId, createdAt])
+  @@index([status])
+}
+
+model BatchRecipient {
+  id             String          @id @default(cuid())
+  batchId        String
+  batch          Batch           @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  rowNumber      Int
+  address        String          @db.VarChar(254)
+  amount         Int
+  memo           String          @db.VarChar(200)
+  status         RecipientStatus @default(PENDING)
+  blinkStatus    String?         @db.VarChar(64)
+  transactionId  String?         @db.VarChar(128)
+  errorCode      String?         @db.VarChar(64)
+  errorMessage   String?         @db.Text
+  processedAt    DateTime?
+  createdAt      DateTime        @default(now())
+
+  @@unique([batchId, rowNumber])
+  @@index([batchId, status])
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  institutionId  String       @db.VarChar(64)
+  institution    Institution  @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  batchId        String?
+  batch           Batch?      @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  type            String       @db.VarChar(64)
+  details         Json?
+  createdAt       DateTime     @default(now())
+
+  @@index([institutionId, createdAt])
+  @@index([batchId])
+}
