@@ -31,6 +31,7 @@ const institutionIdSchema = z
 const registerSchema = z.object({
   institutionId: institutionIdSchema,
   blinkApiKey: z.string().trim().min(16).max(512),
+  walletCurrency: z.enum(["BTC", "USD"]).optional(),
 });
 
 const uploadSchema = z.object({
@@ -109,7 +110,8 @@ router.post(
       const blink = new BlinkClient({ endpoint: config.BLINK_GRAPHQL_URL, timeoutMs: 15_000 });
       let verified;
       try {
-        verified = await blink.verifyApiKey(apiKey, config.DEFAULT_WALLET_CURRENCY);
+        const preferredCurrency = parsed.walletCurrency ?? config.DEFAULT_WALLET_CURRENCY;
+        verified = await blink.verifyApiKey(apiKey, preferredCurrency);
       } catch (error) {
         if (error instanceof AppError) throw error;
         if (error instanceof BlinkApiError) {

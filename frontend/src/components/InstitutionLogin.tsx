@@ -4,13 +4,18 @@ import { ApiError } from "../lib/api";
 import type { Institution } from "../types";
 
 interface Props {
-  onConnect: (institutionId: string, blinkApiKey: string) => Promise<Institution>;
+  onConnect: (
+    institutionId: string,
+    blinkApiKey: string,
+    walletCurrency: "BTC" | "USD",
+  ) => Promise<Institution>;
 }
 
 export function InstitutionLogin({ onConnect }: Props) {
   const [institutionId, setInstitutionId] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+  const [walletCurrency, setWalletCurrency] = useState<"BTC" | "USD">("BTC");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +24,7 @@ export function InstitutionLogin({ onConnect }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await onConnect(institutionId, apiKey);
+      await onConnect(institutionId, apiKey, walletCurrency);
       setApiKey("");
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : "Could not verify this Blink API key");
@@ -101,6 +106,32 @@ export function InstitutionLogin({ onConnect }: Props) {
               </div>
               <small>Create a short-lived key with Read + Write scopes in Blink.</small>
             </label>
+
+            <fieldset className="wallet-pick">
+              <legend>Pay from</legend>
+              <label className={walletCurrency === "BTC" ? "selected" : ""}>
+                <input
+                  type="radio"
+                  name="walletCurrency"
+                  value="BTC"
+                  checked={walletCurrency === "BTC"}
+                  onChange={() => setWalletCurrency("BTC")}
+                />
+                BTC wallet
+                <small>Amounts in sats</small>
+              </label>
+              <label className={walletCurrency === "USD" ? "selected" : ""}>
+                <input
+                  type="radio"
+                  name="walletCurrency"
+                  value="USD"
+                  checked={walletCurrency === "USD"}
+                  onChange={() => setWalletCurrency("USD")}
+                />
+                USD wallet
+                <small>Amounts in cents (100 = $1.00)</small>
+              </label>
+            </fieldset>
 
             {error && <div className="form-error" role="alert">{error}</div>}
 

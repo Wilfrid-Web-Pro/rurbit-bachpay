@@ -335,3 +335,31 @@ footer p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+.wallet-pick {
+  border: 1px solid #d7dde6;
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.wallet-pick legend {
+  font-weight: 600;
+  padding: 0 6px;
+}
+.wallet-pick label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e9ef;
+  cursor: pointer;
+}
+.wallet-pick label.selected {
+  border-color: #0f766e;
+  background: #f0fdfa;
+}
+.wallet-pick small {
+  grid-column: 2;
+}

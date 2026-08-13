@@ -19,14 +19,17 @@ export function useInstitution() {
 
   useEffect(() => void refresh(), [refresh]);
 
-  const connect = useCallback(async (institutionId: string, blinkApiKey: string) => {
-    const data = await apiFetch<{ institution: Institution }>("/institutions/register", {
-      method: "POST",
-      body: JSON.stringify({ institutionId, blinkApiKey }),
-    });
-    setInstitution(data.institution);
-    return data.institution;
-  }, []);
+  const connect = useCallback(
+    async (institutionId: string, blinkApiKey: string, walletCurrency: "BTC" | "USD" = "BTC") => {
+      const data = await apiFetch<{ institution: Institution }>("/institutions/register", {
+        method: "POST",
+        body: JSON.stringify({ institutionId, blinkApiKey, walletCurrency }),
+      });
+      setInstitution(data.institution);
+      return data.institution;
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     await apiFetch<void>("/session", { method: "DELETE" });

@@ -176,6 +176,7 @@ export class BlinkClient {
     address: string;
     amount: number;
     memo: string;
+    walletCurrency?: "BTC" | "USD";
   }): Promise<BlinkPaymentResult> {
     return this.withRateLimitRetry(async () => {
       if (input.method === "INTRA_LEDGER") return this.sendIntraLedger(input);
@@ -222,6 +223,7 @@ export class BlinkClient {
     address: string;
     amount: number;
     memo: string;
+    walletCurrency?: "BTC" | "USD";
   }): Promise<BlinkPaymentResult> {
     const username = input.address.split("@")[0];
     if (!username) throw new BlinkApiError("Recipient username is invalid", "INVALID_RECIPIENT");
@@ -233,7 +235,7 @@ export class BlinkClient {
       `query ResolveRecipientWallet($username: Username!, $walletCurrency: WalletCurrency) {
         accountDefaultWallet(username: $username, walletCurrency: $walletCurrency) { id }
       }`,
-      { username, walletCurrency: "BTC" },
+      { username, walletCurrency: input.walletCurrency ?? "BTC" },
     );
 
     if (!resolved.accountDefaultWallet?.id) {

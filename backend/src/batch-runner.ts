@@ -82,6 +82,7 @@ async function executeClaimedBatch(batchId: string): Promise<void> {
           apiKey,
           method: batch.paymentMethod,
           senderWalletId: institution.walletId,
+        walletCurrency: institution.walletCurrency === "USD" ? "USD" : "BTC",
           address: recipient.address,
           amount: recipient.amount,
           memo: recipient.memo,
